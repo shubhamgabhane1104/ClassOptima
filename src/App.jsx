@@ -1,32 +1,41 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { AuthProvider, useAuth } from './AuthContext';
 import Login from './Login';
 import Navbar from './Navbar';
-import './App.css'; // <-- Imports your clean CSS file!
+import './App.css';
 
-export default function App() {
-  const [user, setUser] = useState(null);
+function MainApp() {
+  const { user, login, logout, switchRole } = useAuth();
 
   if (!user) {
-    return <Login onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />;
+    return <Login onLoginSuccess={login} />;
   }
 
   return (
     <div>
       <Navbar
         user={user}
-        onLogout={() => setUser(null)}
-        onSwitchRole={(newRole) => setUser({ ...user, role: newRole })}
+        onLogout={logout}
+        onSwitchRole={switchRole}
       />
 
       <main className="dashboard-content">
         <h1 className="dashboard-title">Welcome, {user.name}!</h1>
-        <p>Current Active Role: <span className="dashboard-role">{user.role}</span></p>
+        <p>Active Role: <span className="dashboard-role">{user.role}</span></p>
 
         <div className="welcome-box">
-          <h3>🚀 Authentication & Role Switcher Active!</h3>
-          <p>Click the tabs in the top navigation bar to test role switching between Admin, Professor, and Student.</p>
+          <h3>✅ Authentication & Session Management Active!</h3>
+          <p>Your login session is now saved in localStorage. Try refreshing the page — you will stay logged in!</p>
         </div>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
   );
 }

@@ -272,3 +272,200 @@ body {
   color: #94a3b8;
   margin-top: 10px;
 }
+
+/* ==========================================================================
+   Styles for : Resource Tables, Modals & Availability Grid
+   ========================================================================== */
+.resource-page {
+  padding: 24px 0;
+  text-align: left;
+}
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.page-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+}
+.page-subtitle {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+.btn-primary {
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.btn-secondary {
+  padding: 10px 18px;
+  background: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+.table-card {
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.custom-table th {
+  background: #0f172a;
+  padding: 14px 18px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  border-bottom: 1px solid #1e293b;
+  font-weight: 700;
+}
+.custom-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #1e293b;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.badge-indigo { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+.badge-emerald { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.font-bold { font-weight: 700; color: #fff; }
+.text-green { color: #34d399; }
+.text-indigo { color: #818cf8; }
+.text-muted { color: #94a3b8; }
+.btn-delete {
+  padding: 5px 10px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-delete:hover {
+  background: #ef4444;
+  color: #fff;
+}
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+.modal-card {
+  background: #111827;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  overflow: hidden;
+}
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #fff;
+}
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 22px;
+  cursor: pointer;
+}
+.modal-body {
+  padding: 20px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid #1e293b;
+  background: #0f172a;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+/* Availability Picker Grid */
+.availability-box {
+  margin-top: 16px;
+  padding: 12px;
+  background: #0f172a;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+}
+.section-label {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 10px;
+}
+.availability-grid {
+  display: grid;
+  grid-template-columns: 70px repeat(6, 1fr);
+  gap: 4px;
+}
+.grid-header-slot {
+  text-align: center;
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 700;
+}
+.grid-day-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+}
+.slot-toggle-btn {
+  padding: 6px 2px;
+  border-radius: 4px;
+  border: 1px solid #334155;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.slot-available {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.slot-busy {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}

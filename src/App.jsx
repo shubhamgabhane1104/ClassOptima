@@ -1,30 +1,31 @@
-import React , { useState } from 'react';
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './AuthContext';
 import Login from './Login';
 import Navbar from './Navbar';
-import TeacherManager  from './TeacherManager';
+import TeacherManager from './TeacherManager';
 import ClassroomManager from './ClassroomManager';
+import './App.css';
 
-import './App.css'; 
+function MainApp() {
+  const { user, login, logout, switchRole } = useAuth();
+  const [adminTab, setAdminTab] = useState('teachers'); // 'teachers' | 'classrooms'
 
-
-export default function App() {
-  const [user, setUser] = useState(null);
-  const [adminTab,setAdminTab]=useState('teachers'); // 'teachers' or 'classrooms' only possible states.
-
-
+  // If user is not logged in, show Login page
   if (!user) {
-    return <Login onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />;
+    return <Login onLoginSuccess={login} />;
   }
 
+  // Once logged in, show Navbar and views
   return (
     <div>
       <Navbar
         user={user}
-        onLogout={() => setUser(null)}
-        onSwitchRole={(newRole) => setUser({ ...user, role: newRole })}
+        onLogout={logout}
+        onSwitchRole={switchRole}
       />
 
       <main className="dashboard-content">
+        {/* If Admin is logged in, show Faculty and Classroom Managers */}
         {user.role === 'admin' ? (
           <div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '20px' }}>
@@ -32,32 +33,37 @@ export default function App() {
                 className={`btn-demo ${adminTab === 'teachers' ? 'btn-primary' : ''}`}
                 onClick={() => setAdminTab('teachers')}
               >
-                Faculty Manager
+                👨‍🏫 Faculty Manager
               </button>
               <button
                 className={`btn-demo ${adminTab === 'classrooms' ? 'btn-primary' : ''}`}
                 onClick={() => setAdminTab('classrooms')}
               >
-                Classroom & Lab Manager
+                🏢 Classroom & Lab Manager
               </button>
             </div>
+
             {adminTab === 'teachers' && <TeacherManager />}
             {adminTab === 'classrooms' && <ClassroomManager />}
           </div>
         ) : (
           <div className="welcome-box">
-            <h3>Logged in as {user.name} ({user.role})</h3>
-            <p>Switch to 👑 Admin in the top bar to view Faculty and Classroom management.</p>
+            <h3>Welcome, {user.name}!</h3>
+            <p>Logged in as: <strong style={{ color: '#818cf8', textTransform: 'uppercase' }}>{user.role}</strong></p>
+            <p style={{ color: '#94a3b8', marginTop: '10px' }}>
+              Switch to 👑 Admin in the top navigation bar to manage faculty and classrooms.
+            </p>
           </div>
         )}
-        <h1 className="dashboard-title">Welcome, {user.name}!</h1>
-        <p>Current Active Role: <span className="dashboard-role">{user.role}</span></p>
-
-        <div className="welcome-box">
-          <h3>🚀 Authentication & Role Switcher Active!</h3>
-          <p>Click the tabs in the top navigation bar to test role switching between Admin, Professor, and Student.</p>
-        </div>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
   );
 }

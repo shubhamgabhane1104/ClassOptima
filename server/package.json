@@ -1,0 +1,11 @@
+{
+  "name": "classoptima-server",
+  "version": "1.0.0",
+  "description": "Backend API server for ClassOptima",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  }
+}

@@ -1,6 +1,14 @@
 import React from 'react';
+import './navbar.css';
 
 export default function Navbar({ user, onLogout, onSwitchRole }) {
+  // Generates avatar initials (e.g. "Dr. Amit Sharma" -> "AS", "Admin Officer" -> "AO")
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    const words = name.replace('Dr.', '').replace('Prof.', '').trim().split(' ');
+    return words.map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  };
+
   return (
     <header className="navbar">
       <div className="brand">
@@ -8,7 +16,7 @@ export default function Navbar({ user, onLogout, onSwitchRole }) {
         <h2 className="brand-title">Class<span>Optima</span></h2>
       </div>
 
-      {/* Role Navigation Switcher */}
+      {/* 3-Role Navigation Switcher */}
       <nav className="role-tabs">
         <button
           className={`role-btn ${user.role === 'admin' ? 'active' : ''}`}
@@ -30,8 +38,21 @@ export default function Navbar({ user, onLogout, onSwitchRole }) {
         </button>
       </nav>
 
-      <div className="nav-user">
-        <span>User: <strong>{user.name}</strong></span>
+      {/* User Info & Actions */}
+      <div className="nav-actions">
+        <div className="status-pill">
+          <span className="status-dot"></span>
+          <span>System Live</span>
+        </div>
+
+        <div className="user-badge">
+          <div className="user-avatar">{getInitials(user.name)}</div>
+          <div className="user-details">
+            <span className="user-name">{user.name}</span>
+            <span className="user-role-label">{user.role}</span>
+          </div>
+        </div>
+
         <button className="btn-logout" onClick={onLogout}>
           Logout
         </button>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/portals.css';
 
 export default function LiveLectureTracker() {
@@ -7,8 +7,24 @@ export default function LiveLectureTracker() {
     subject: 'Data Structures',
     professor: 'Dr. Amit Sharma',
     room: 'Room 304',
-    status: 'Live Now',
+    endTime: Date.now() + 45 * 60 * 1000,
   });
+
+  const [timeLeft, setTimeLeft] = useState(
+    Math.max(0, lecture.endTime - Date.now())
+  );
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(Math.max(0, lecture.endTime - Date.now()));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [lecture.endTime]);
+
+  const totalSeconds = Math.floor(timeLeft / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
 
   return (
     <div className="live-hero">
@@ -16,7 +32,15 @@ export default function LiveLectureTracker() {
         <h2>{lecture.subject}</h2>
         <p>{lecture.professor}</p>
         <p>{lecture.room}</p>
-        <strong>{lecture.status}</strong>
+
+        {timeLeft > 0 ? (
+          <p>
+            Lecture ends in: {minutes}:
+            {String(seconds).padStart(2, '0')}
+          </p>
+        ) : (
+          <p>Lecture ended</p>
+        )}
       </div>
 
       <div className="prof-avatar">

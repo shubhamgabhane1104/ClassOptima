@@ -1,0 +1,60 @@
+
+/* Print styles for ClassOptima timetable */
+
+@media print {
+  body {
+    font-family: Arial, sans-serif;
+    color: #000 !important;
+    background: #fff !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Hide navigation and interactive controls */
+  nav,
+  header,
+  footer,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Make the timetable fit the printed page */
+  #timetable {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    color: #000 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+  }
+
+  #timetable table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11pt;
+  }
+
+  #timetable th,
+  #timetable td {
+    color: #000 !important;
+    background: #fff !important;
+    border: 1px solid #555 !important;
+    padding: 8px;
+    text-align: left;
+  }
+
+  #timetable thead {
+    display: table-header-group;
+  }
+
+  #timetable tr {
+    break-inside: avoid;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+}

@@ -1,16 +1,59 @@
-# React + Vite
+# 🎓 ClassOptima – Intelligent Class Allocation System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> An automated, conflict-free timetable allocation platform built with the MERN stack (MongoDB, Express, React, Node.js) and Constraint Satisfaction Problem (CSP) scheduling algorithms.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Key Features
 
-## React Compiler
+- **Multi-Role RBAC**: Tailored dashboards for Administrators, Faculty, and Students.
+- **Conflict-Free Scheduling Engine**: Algorithmic backtracking preventing classroom, teacher, and slot clashes.
+- **Resource Management**: Dynamic availability grids for teachers and room capacity tracking.
+- **Timetable Matrix**: Interactive weekly matrix with Theory and Lab distinction.
+- **Export & Portals**: PDF timetable exports and personalized faculty/student views.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🔐 Authentication & RBAC Architecture
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+ClassOptima implements stateless, token-based authentication using **JSON Web Tokens (JWT)**, **bcrypt** password hashing, and client-side **ProtectedRoute** route guards.
+
+### 🛡️ Role-Based Access Control (RBAC) Matrix
+
+| Resource / Action | Admin | Professor | Student | Middleware Guard |
+| :--- | :---: | :---: | :---: | :--- |
+| **User & Role Management** | ✅ Full Access | ❌ Denied | ❌ Denied | `requireRole(['admin'])` |
+| **Faculty & Classrooms** | ✅ Full CRUD | ❌ Denied | ❌ Denied | `requireRole(['admin'])` |
+| **Curriculum & Subjects** | ✅ Full CRUD | ❌ Denied | ❌ Denied | `requireRole(['admin'])` |
+| **Run Timetable Engine** | ✅ Execute | ❌ Denied | ❌ Denied | `requireRole(['admin'])` |
+| **Personal Schedule** | ✅ All Views | ✅ Assigned Slots | ✅ Batch Slots | `verifyToken` |
+| **Live Timetable Matrix** | ✅ Full Grid | ✅ Full Grid | ✅ Full Grid | `verifyToken` |
+| **Export Timetable (PDF)** | ✅ Enabled | ✅ Enabled | ✅ Enabled | Public / Authenticated |
+
+---
+
+## 📡 Authentication API Endpoints
+
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Public / Admin | Register new user with hashed password |
+| `POST` | `/api/auth/login` | Public | Authenticate credentials and return signed JWT |
+| `GET` | `/api/auth/me` | Authenticated | Fetch current profile using `Bearer <token>` |
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React 18, Vite, Vanilla CSS Design System, Lucide Icons
+- **Backend**: Node.js, Express.js
+- **Database**: MongoDB Atlas / Mongoose
+- **Security**: JWT (`jsonwebtoken`), `bcryptjs`, CORS, Dotenv
+
+---
+
+## ⚙️ Local Development Setup
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/shubhamgabhane1104/ClassOptima.git
+cd ClassOptima

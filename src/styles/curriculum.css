@@ -1,0 +1,15 @@
+.curriculum-page {
+    padding: 20px 0;
+    text-align: left;
+  }
+  
+  .badge-code {
+    font-family: monospace;
+    font-weight: 700;
+    color: #818cf8;
+  }
+  
+  .hours-pill {
+    color: #34d399;
+    font-weight: 700;
+  }

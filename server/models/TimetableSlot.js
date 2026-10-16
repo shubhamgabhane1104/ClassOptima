@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 const timetableSlotSchema = new mongoose.Schema({

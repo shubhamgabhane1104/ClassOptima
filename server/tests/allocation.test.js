@@ -56,7 +56,7 @@ for (const test of tests) {
     console.log(`PASS: ${test.name}`);
   } catch (error) {
     failures++;
-    console.error(`FAIL: ${test.name} — ${error.message}`);
+    console.error(`FAIL: ${test.name} - ${error.message}`);
   }
 }
 

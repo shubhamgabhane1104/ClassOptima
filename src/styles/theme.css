@@ -1,0 +1,43 @@
+
+/* Day 9: Dark and Light Academic Themes */
+
+/* Default dark theme */
+body {
+  background: #111827;
+  color: #e2e8f0;
+}
+
+/* Light theme */
+body.light-mode {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+body.light-mode .timetable-container {
+  background: #fff;
+  border-color: #cbd5e1;
+}
+
+body.light-mode .timetable-matrix th {
+  background: #e2e8f0;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+body.light-mode .timetable-matrix td {
+  border-color: #cbd5e1;
+}
+
+body.light-mode .day-cell {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+body.light-mode .lecture-card {
+  background: #fff;
+  border-color: #cbd5e1;
+}
+
+body.light-mode .card-title {
+  color: #0f172a;
+}

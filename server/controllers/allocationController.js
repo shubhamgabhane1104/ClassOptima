@@ -1,4 +1,3 @@
-
 const { randomUUID } = require('crypto');
 const { solveTimetable } = require('../services/allocationEngine');
 const { checkClash } = require('../services/conflictDetector');

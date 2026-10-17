@@ -3,6 +3,7 @@
 // Clears the database, loads the sample college, generates and publishes a timetable.
 require('dotenv').config();
 const mongoose = require('mongoose');
+require('../config/db'); // applies the DNS fix
 const User = require('../models/User');
 const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');

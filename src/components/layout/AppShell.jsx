@@ -1,10 +1,11 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, DoorOpen, BookOpen, GraduationCap, CalendarCog, UserRound, LogOut, CalendarDays, Contact,
+  LayoutDashboard, Users, DoorOpen, BookOpen, GraduationCap, CalendarCog, UserRound, LogOut, CalendarDays, Contact, CalendarPlus, CalendarCheck,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import college from '../../config/college';
 import Crest from './Crest';
+import { NotificationBell } from '../common/Notifications';
 
 const NAV = {
   admin: [
@@ -15,13 +16,16 @@ const NAV = {
     { to: '/admin/subjects', label: 'Subjects', icon: BookOpen },
     { to: '/admin/sections', label: 'Divisions', icon: GraduationCap },
     { to: '/admin/students', label: 'Students', icon: Contact },
+    { to: '/admin/bookings', label: 'Room bookings', icon: CalendarCheck },
   ],
   professor: [
     { to: '/professor', label: 'My Timetable', icon: CalendarDays, end: true },
+    { to: '/professor/rooms', label: 'Book a room', icon: CalendarPlus },
     { to: '/professor/profile', label: 'Profile & Availability', icon: UserRound },
   ],
   student: [
     { to: '/student', label: 'Class Timetable', icon: CalendarDays, end: true },
+    { to: '/student/rooms', label: 'Book a room', icon: CalendarPlus },
   ],
 };
 
@@ -50,6 +54,7 @@ export default function AppShell() {
           </div>
         </div>
         <div className="topbar-user">
+          {user.role !== 'admin' && <NotificationBell />}
           <span className="avatar" aria-hidden="true">{initials(user.name)}</span>
           <div className="topbar-user-text">
             <span className="user-name">{user.name}</span>

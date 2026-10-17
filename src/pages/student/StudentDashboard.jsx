@@ -7,6 +7,8 @@ import { useToast } from '../../components/common/Toast';
 import { EmptyState, ErrorNote, PhotoBanner, Spinner } from '../../components/common/ui';
 import TimetableGrid from '../../components/timetable/TimetableGrid';
 import LiveClassBanner from '../../components/timetable/LiveClassBanner';
+import UpcomingExtras from '../../components/timetable/UpcomingExtras';
+import { NoticesPanel } from '../../components/common/Notifications';
 import { divisionLabel } from '../../config/schedule';
 import { exportICS } from '../../services/calendarExport';
 
@@ -18,6 +20,11 @@ export default function StudentDashboard() {
   const [sectionId, setSectionId] = useState(own?._id || '');
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
+  const [extras, setExtras] = useState([]);
+
+  useEffect(() => {
+    api.get('/bookings/feed').then((d) => setExtras(d.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     api.get('/public/sections').then((d) => {
@@ -43,7 +50,8 @@ export default function StudentDashboard() {
       />
       <ErrorNote error={error} />
 
-      {data && isOwn && data.section?._id === sectionId && <LiveClassBanner slots={data.data} />}
+      {data && isOwn && data.section?._id === sectionId && <LiveClassBanner slots={data.data} extras={extras} />}
+      <NoticesPanel title="Notices for you" />
 
       <section className="panel">
         <div className="panel-toolbar tt-toolbar">
@@ -78,11 +86,16 @@ export default function StudentDashboard() {
           <EmptyState title="Timetable not published yet">The college office has not released this division’s timetable. Check back soon.</EmptyState>
         ) : (
           <>
-            <TimetableGrid slots={data.data} perspective="section" />
-            <p className="muted small grid-legend"><span className="legend legend-theory" /> Theory <span className="legend legend-lab" /> Practical (2-hour lab)</p>
+            <TimetableGrid slots={data.data} perspective="section" extras={isOwn ? extras : null} />
+            <p className="muted small grid-legend">
+              <span className="legend legend-theory" /> Theory <span className="legend legend-lab" /> Practical (2-hour lab)
+              {isOwn && <><span className="legend legend-extra" /> Extra lecture or room booking (dates shown next to each day)</>}
+            </p>
           </>
         )}
       </section>
+
+      {own && <UpcomingExtras extras={extras} perspective="section" bookLink="/student/rooms" />}
     </div>
   );
 }

@@ -7,6 +7,8 @@ const Classroom = require('../models/Classroom');
 const Subject = require('../models/Subject');
 const ClassSection = require('../models/ClassSection');
 const TimetableSlot = require('../models/TimetableSlot');
+const RoomBooking = require('../models/RoomBooking');
+const { collegeNow } = require('../services/bookingService');
 const { asyncHandler, HttpError } = require('../middleware/errorHandler');
 
 const DEFAULT_PROFESSOR_PASSWORD = 'prof123';
@@ -169,11 +171,12 @@ exports.stats = asyncHandler(async (req, res) => {
     TimetableSlot.countDocuments({ isPublished: true }),
     TimetableSlot.countDocuments({ isLocked: true }),
   ]);
+  const bookings = await RoomBooking.countDocuments({ status: 'approved', date: { $gte: collegeNow().date } });
   const lastSlot = await TimetableSlot.findOne().sort({ updatedAt: -1 }).select('updatedAt');
   res.json({
     success: true,
     data: {
-      teachers, classrooms, labs, subjects, sections, students, slots, locked,
+      teachers, classrooms, labs, subjects, sections, students, slots, locked, bookings,
       status: slots === 0 ? 'empty' : published === slots ? 'published' : 'draft',
       lastUpdated: lastSlot ? lastSlot.updatedAt : null,
     },

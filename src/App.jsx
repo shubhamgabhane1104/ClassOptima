@@ -15,6 +15,8 @@ import StudentList from './pages/admin/StudentList';
 import ProfessorDashboard from './pages/professor/ProfessorDashboard';
 import ProfessorProfile from './pages/professor/ProfessorProfile';
 import StudentDashboard from './pages/student/StudentDashboard';
+import RoomBookingPage from './pages/shared/RoomBookingPage';
+import BookingList from './pages/admin/BookingList';
 
 // Only lets a user in when they are logged in with one of the allowed roles.
 function ProtectedRoute({ roles, children }) {
@@ -48,11 +50,14 @@ export default function App() {
               <Route path="/admin/subjects" element={<ProtectedRoute roles={['admin']}><SubjectManager /></ProtectedRoute>} />
               <Route path="/admin/sections" element={<ProtectedRoute roles={['admin']}><SectionManager /></ProtectedRoute>} />
               <Route path="/admin/students" element={<ProtectedRoute roles={['admin']}><StudentList /></ProtectedRoute>} />
+              <Route path="/admin/bookings" element={<ProtectedRoute roles={['admin']}><BookingList /></ProtectedRoute>} />
 
               <Route path="/professor" element={<ProtectedRoute roles={['professor']}><ProfessorDashboard /></ProtectedRoute>} />
               <Route path="/professor/profile" element={<ProtectedRoute roles={['professor']}><ProfessorProfile /></ProtectedRoute>} />
+              <Route path="/professor/rooms" element={<ProtectedRoute roles={['professor']}><RoomBookingPage /></ProtectedRoute>} />
 
               <Route path="/student" element={<ProtectedRoute roles={['student']}><StudentDashboard /></ProtectedRoute>} />
+              <Route path="/student/rooms" element={<ProtectedRoute roles={['student']}><RoomBookingPage /></ProtectedRoute>} />
             </Route>
 
             <Route path="*" element={<HomeRedirect />} />

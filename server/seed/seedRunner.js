@@ -10,6 +10,9 @@ const Classroom = require('../models/Classroom');
 const Subject = require('../models/Subject');
 const ClassSection = require('../models/ClassSection');
 const TimetableSlot = require('../models/TimetableSlot');
+const RoomBooking = require('../models/RoomBooking');
+const Notification = require('../models/Notification');
+const bookingService = require('../services/bookingService');
 const { runAllocation } = require('../services/timetableService');
 const data = require('./sampleCollegeData');
 
@@ -21,6 +24,7 @@ async function seed() {
   await Promise.all([
     User.deleteMany({}), Teacher.deleteMany({}), Student.deleteMany({}), Classroom.deleteMany({}),
     Subject.deleteMany({}), ClassSection.deleteMany({}), TimetableSlot.deleteMany({}),
+    RoomBooking.deleteMany({}), Notification.deleteMany({}),
   ]);
   console.log('Cleared old data');
 
@@ -66,12 +70,37 @@ async function seed() {
   console.log(`Timetable generated: ${result.stats.placed}/${result.stats.totalUnits} lectures placed in ${result.stats.durationMs} ms and published`);
   if (result.unallocated.length) console.log('Could not place:', result.unallocated);
 
+  await seedSampleBooking(sectionDocs[0], teacherByKey.sharma);
+
   console.log('\nDemo logins:');
   console.log(`  Admin     ${data.admin.email} / ${data.DEMO_PASSWORDS.admin}`);
   console.log(`  Professor ${data.teachers[0].email} / ${data.DEMO_PASSWORDS.professor}`);
   console.log(`  Student   ${data.students[0][1]} / ${data.DEMO_PASSWORDS.student}`);
 
   await mongoose.disconnect();
+}
+
+// One sample extra lecture on the next working day so the booking and
+// notification features have something to show straight away.
+async function seedSampleBooking(section, teacher) {
+  let date = bookingService.addDays(bookingService.collegeNow().date, 1);
+  if (bookingService.weekdayCode(date) === 'SUN') date = bookingService.addDays(date, 1);
+  const subject = await Subject.findOne({ code: 'CE501' });
+  const user = await User.findOne({ teacher: teacher._id });
+  const request = { date, startTime: '15:45', endTime: '16:45', attendees: section.studentCount, roomType: 'Lecture Hall', teacherId: teacher._id, sectionId: section._id, userId: user._id };
+  const { room } = await bookingService.allocate(request);
+  if (!room) return;
+  const b = await RoomBooking.create({
+    requestedBy: user._id, requesterRole: 'professor', requesterName: teacher.name, kind: 'extra-lecture',
+    title: `Extra lecture: ${subject.name}`, reason: 'Revision of normalization before the unit test',
+    classSection: section._id, subject: subject._id, teacher: teacher._id, date, startTime: '15:45', endTime: '16:45',
+    attendees: section.studentCount, roomType: 'Lecture Hall', classroom: room._id, status: 'approved',
+  });
+  await Notification.create({
+    classSection: section._id, type: 'extra-lecture', title: b.title,
+    message: `${teacher.name} has scheduled an extra lecture of ${subject.name} on ${bookingService.describeWhen(b)} in ${room.roomNumber} (${room.building}).`, booking: b._id,
+  });
+  console.log(`Sample extra lecture booked in ${room.roomNumber} on ${date}`);
 }
 
 seed().catch(async (err) => {

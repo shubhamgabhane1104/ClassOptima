@@ -7,6 +7,8 @@ import { useToast } from '../../components/common/Toast';
 import { EmptyState, ErrorNote, PhotoBanner, Spinner } from '../../components/common/ui';
 import TimetableGrid from '../../components/timetable/TimetableGrid';
 import LiveClassBanner from '../../components/timetable/LiveClassBanner';
+import UpcomingExtras from '../../components/timetable/UpcomingExtras';
+import { NoticesPanel } from '../../components/common/Notifications';
 import { DAYS, DAY_LABELS } from '../../config/schedule';
 import { exportICS } from '../../services/calendarExport';
 
@@ -16,10 +18,11 @@ export default function ProfessorDashboard() {
   const [slots, setSlots] = useState(null);
   const [load, setLoad] = useState(null);
   const [error, setError] = useState('');
+  const [extras, setExtras] = useState([]);
 
   useEffect(() => {
-    Promise.all([api.get('/professor/schedule'), api.get('/professor/workload')])
-      .then(([s, w]) => { setSlots(s.data); setLoad(w.data); })
+    Promise.all([api.get('/professor/schedule'), api.get('/professor/workload'), api.get('/bookings/feed')])
+      .then(([s, w, f]) => { setSlots(s.data); setLoad(w.data); setExtras(f.data); })
       .catch((e) => setError(e.message));
   }, []);
 
@@ -39,7 +42,7 @@ export default function ProfessorDashboard() {
       {!slots ? <Spinner /> : (
         <>
           <div className="two-col">
-            <LiveClassBanner slots={slots} perspective="teacher" />
+            <LiveClassBanner slots={slots} extras={extras} perspective="teacher" />
             {load && (
               <section className="panel workload">
                 <h2 className="panel-title">Weekly workload</h2>
@@ -80,8 +83,11 @@ export default function ProfessorDashboard() {
             </div>
             {slots.length === 0 ? (
               <EmptyState title="Your timetable has not been published yet">The admin office will publish it once the semester timetable is final.</EmptyState>
-            ) : <TimetableGrid slots={slots} perspective="teacher" />}
+            ) : <TimetableGrid slots={slots} perspective="teacher" extras={extras} />}
           </section>
+
+          <UpcomingExtras extras={extras} perspective="teacher" bookLink="/professor/rooms" />
+          <NoticesPanel title="Recent notifications" />
 
           {load?.assignments?.length > 0 && (
             <section className="panel">

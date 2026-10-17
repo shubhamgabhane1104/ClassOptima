@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, DoorOpen, BookOpen, GraduationCap, Contact, CalendarCog, CheckCircle2, Circle } from 'lucide-react';
+import { Users, DoorOpen, BookOpen, GraduationCap, Contact, CalendarCog, CalendarCheck, CheckCircle2, Circle } from 'lucide-react';
 import { api } from '../../services/api';
 import college from '../../config/college';
 import { ErrorNote, PhotoBanner, Spinner, Stat } from '../../components/common/ui';
@@ -53,6 +53,7 @@ export default function AdminDashboard() {
             <Stat icon={BookOpen} value={stats.subjects} label="Subjects" />
             <Stat icon={GraduationCap} value={stats.sections} label="Divisions" />
             <Stat icon={Contact} value={stats.students} label="Students registered" />
+            <Link to="/admin/bookings" className="stat-link"><Stat icon={CalendarCheck} value={stats.bookings} label="Upcoming room bookings" /></Link>
           </div>
 
           <section className="panel">

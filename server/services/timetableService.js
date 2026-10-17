@@ -56,6 +56,29 @@ async function validateCandidate(candidate) {
   return validateSlot(candidate, slots, buildContext(resources));
 }
 
+// Upcoming approved room bookings that now overlap a weekly lecture
+// (same room, teacher or division). Used to warn the admin after regenerating.
+async function bookingClashes() {
+  const RoomBooking = require('../models/RoomBooking');
+  const { collegeNow, weekdayCode, timesOverlap, describeWhen } = require('./bookingService');
+  const [bookings, slots] = await Promise.all([
+    RoomBooking.find({ status: 'approved', date: { $gte: collegeNow().date } }).populate('classroom', 'roomNumber').lean(),
+    TimetableSlot.find().populate('subject', 'name').lean(),
+  ]);
+  const out = [];
+  for (const b of bookings) {
+    const day = weekdayCode(b.date);
+    const hit = slots.find((s) => s.day === day && timesOverlap(b.startTime, b.endTime, s.startTime, s.endTime) && (
+      String(s.classroom) === String(b.classroom && b.classroom._id)
+      || (b.teacher && String(s.teacher) === String(b.teacher))
+      || (b.classSection && String(s.classSection) === String(b.classSection))));
+    if (hit) {
+      out.push(`Booking "${b.title}" (${describeWhen(b)}, ${b.classroom ? b.classroom.roomNumber : 'room'}, by ${b.requesterName}) now overlaps ${hit.subject ? hit.subject.name : 'a lecture'}. Cancel it in Room bookings or move the lecture.`);
+    }
+  }
+  return out;
+}
+
 const populateSlot = (query) =>
   query
     .populate('subject', 'code name type')
@@ -63,4 +86,4 @@ const populateSlot = (query) =>
     .populate('classroom', 'roomNumber building floor type capacity')
     .populate('classSection', 'name department semester section studentCount');
 
-module.exports = { loadResources, buildContext, runAllocation, getConflictReport, validateCandidate, populateSlot };
+module.exports = { bookingClashes, loadResources, buildContext, runAllocation, getConflictReport, validateCandidate, populateSlot };

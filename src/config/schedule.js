@@ -32,3 +32,42 @@ export const nowParts = () => {
   const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   return { day, time, date: d };
 };
+
+// ---- Dates for one-off bookings ----
+export const toMin = (hhmm) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+};
+export const addMinutes = (hhmm, mins) => {
+  const n = toMin(hhmm) + Number(mins);
+  return `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`;
+};
+const pad = (n) => String(n).padStart(2, '0');
+export const isoDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+export const todayISO = () => isoDate(new Date());
+
+// The next date (today or later) that falls on the given weekday code
+export const nextDateFor = (dayCode) => {
+  const want = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].indexOf(dayCode);
+  const d = new Date();
+  d.setDate(d.getDate() + ((want - d.getDay() + 7) % 7));
+  return isoDate(d);
+};
+
+export const niceDate = (iso, opts = { weekday: 'short', day: 'numeric', month: 'short' }) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString('en-IN', opts);
+
+export const dayCodeOf = (iso) => ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][new Date(`${iso}T00:00:00`).getDay()];
+
+// Turns a booking into the same shape as a timetable slot (for the live tracker)
+export const bookingAsSlot = (b) => ({
+  _id: b._id,
+  day: dayCodeOf(b.date),
+  startTime: b.startTime,
+  endTime: b.endTime,
+  subject: { name: b.title, code: b.subject?.code || 'Extra' },
+  classroom: b.classroom,
+  teacher: b.teacher || { name: b.requesterName },
+  classSection: b.classSection || null,
+  isExtra: true,
+});

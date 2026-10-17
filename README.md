@@ -6,8 +6,8 @@ clash-free weekly timetable for a college, and gives every user a portal of thei
 | Portal | What it does |
 | --- | --- |
 | **Admin** | Manage faculty (with availability), classrooms & labs, subjects and divisions. Run the CSP scheduling engine, see clashes, fine-tune by drag-and-drop with live conflict checking, lock slots, publish/unpublish, download PDFs. |
-| **Professor** | Personal weekly timetable, "Happening now" tracker, weekly workload gauge (theory/lab hours, hours per day), assigned subjects, update cabin & availability, PDF and calendar (.ics) export. |
-| **Student** | Self-registration with division, division timetable, "Happening now" live lecture with countdown and room location, view any division, print, PDF and calendar export. |
+| **Professor** | Request a room for an extra lecture or meeting (students of the division are notified automatically). Personal weekly timetable, "Happening now" tracker, weekly workload gauge (theory/lab hours, hours per day), assigned subjects, update cabin & availability, PDF and calendar (.ics) export. |
+| **Student** | Self-registration with division, division timetable, "Happening now" live lecture with countdown and room location, view any division, print, PDF and calendar export. Book an empty room or lab for group study, projects or meetings. Notifications for extra lectures. |
 
 All data is stored in MongoDB. Login uses JWT with role-based access control on every API route.
 
@@ -75,6 +75,7 @@ The login page also has one-click buttons for these three accounts, useful durin
 | `npm run dev` / `npm --prefix server run dev` | Run only the frontend / only the API |
 | `npm run seed` | Reset the database with the sample college |
 | `npm test` | Run the allocation engine tests (no database needed) |
+| `npm --prefix server run test:bookings` | Room booking API tests (needs `npm run seed` and the API running) |
 | `npm run lint` | Lint the frontend |
 | `npm start` | Production: build React and serve it from Express on port 5000 |
 
@@ -146,6 +147,13 @@ ClassOptima/
 | GET | `/professor/schedule`, `/professor/workload` | Professor | Own timetable + live status, workload |
 | GET/PUT | `/professor/profile` | Professor | Cabin, phone, availability |
 | GET | `/student/timetable?section=` | Logged in | Published timetable of a division + live status |
+| POST | `/bookings` | Student / Professor | Request a room; an empty room is allocated immediately or the reply explains why not, with suggested free times |
+| GET | `/bookings/availability?date&startTime&durationMinutes&attendees&roomType` | Logged in | Free rooms for a time (live preview in the form) |
+| GET | `/bookings/mine`, `/bookings/feed` | Student / Professor | Own bookings; upcoming bookings and extra lectures for the user's timetable |
+| GET | `/bookings/my-divisions` | Professor | Divisions and subjects the professor teaches |
+| PATCH | `/bookings/:id/cancel` | Owner / Admin | Cancel and release the room (notifies affected users) |
+| GET | `/bookings` | Admin | All bookings |
+| GET / PATCH | `/notifications`, `/notifications/read` | Logged in | Notifications and mark-all-read |
 | GET | `/export/pdf/:sectionId` | Logged in | Division timetable PDF |
 | GET | `/export/pdf/teacher/:teacherId` (or `me`) | Admin / own professor | Faculty timetable PDF |
 
@@ -167,22 +175,40 @@ Scheduling is modelled as a **Constraint Satisfaction Problem**:
 The sample college (3 divisions, 48 lecture blocks) is solved in well under a second with zero backtracks;
 the tests also check a 6-division case. Run `npm test` to see it.
 
-## 9. Team workflow
+## 9. Room bookings and extra lectures
 
-All of this lives on the `feature/full-integration` branch. To try it and merge:
+Students and professors book a room from **Book a room** in their portal by giving the purpose, number of
+people, room type, date, start time, duration and reason. While they fill the form, the page shows which rooms
+are free. On submit the server allocates a room immediately when one is available:
+
+- A room is free when no weekly lecture uses it on that weekday at an overlapping time and no other booking holds it.
+- It must seat everyone and match the requested type (extra lectures default to a lecture hall for theory and
+  the subject's lab type for practicals). The smallest suitable room is chosen so big halls stay free.
+- Students cannot book during their own division's lectures; an extra lecture needs the professor and the
+  division to be free. Bookings run 8:00 AM to 7:00 PM, Monday to Saturday, up to 3 hours, up to 60 days ahead.
+  Students can hold 3 upcoming bookings at a time.
+- If nothing is free, the reply says why and suggests up to 4 free times.
+
+When a professor books an extra lecture, every student of that division gets a notification (bell icon in the
+top bar and **Notices** on the dashboard), and the lecture appears on both the professor's and the students'
+timetable next to the date of that week, plus in the **Extra lectures and room bookings** list. Cancelling,
+by the requester or by the admin in **Room bookings**, releases the room and notifies everyone affected.
+If the admin regenerates the timetable and a weekly lecture now overlaps a booking, the generator lists it as
+a warning.
+
+## 10. Team workflow
+
+Pull the latest code before you start and after a teammate pushes:
 
 ```bash
-git fetch origin
-git checkout feature/full-integration
-npm run setup && npm run seed && npm run dev:all
-# when the team is happy:
-git checkout main && git merge feature/full-integration && git push
+git pull origin master
+npm run setup            # only needed when package.json changed
 ```
 
 **Never commit `server/.env`** (it holds your database password). It is in `.gitignore`; share
 `server/.env.example` instead.
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 | Problem | Fix |
 | --- | --- |

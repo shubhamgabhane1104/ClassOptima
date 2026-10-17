@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { MapPin, Clock, UserRound, Users } from 'lucide-react';
-import { DAYS, nowParts, shortDivision, t12 } from '../../config/schedule';
+import { DAYS, nowParts, shortDivision, t12, bookingAsSlot, todayISO } from '../../config/schedule';
 
 const minutesBetween = (a, b) => {
   const [ah, am] = a.split(':').map(Number);
@@ -9,18 +9,20 @@ const minutesBetween = (a, b) => {
 };
 
 // "Happening now" tracker: the current lecture with a countdown, or the next one today.
-export default function LiveClassBanner({ slots, perspective = 'section' }) {
+export default function LiveClassBanner({ slots: weekly, extras = [], perspective = 'section' }) {
   const [now, setNow] = useState(nowParts());
   useEffect(() => {
     const t = setInterval(() => setNow(nowParts()), 15000);
     return () => clearInterval(t);
   }, []);
 
-  const today = slots.filter((s) => s.day === now.day).sort((a, b) => a.slotIndex - b.slotIndex);
+  // weekly lectures plus today's extra lectures / room bookings
+  const slots = [...weekly, ...extras.filter((b) => b.date === todayISO()).map(bookingAsSlot)];
+  const today = slots.filter((s) => s.day === now.day).sort((a, b) => a.startTime.localeCompare(b.startTime));
   const current = today.find((s) => s.startTime <= now.time && now.time < s.endTime);
   const next = today.find((s) => s.startTime > now.time);
 
-  const who = (s) => (perspective === 'teacher'
+  const who = (s) => (perspective === 'teacher' && s.classSection
     ? <><Users size={15} /> {shortDivision(s.classSection)} ({s.classSection?.studentCount} students)</>
     : <><UserRound size={15} /> {s.teacher?.name}</>);
 

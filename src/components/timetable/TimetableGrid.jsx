@@ -1,12 +1,15 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { Lock, FlaskConical } from 'lucide-react';
-import { DAYS, DAY_LABELS, PERIODS, RECESS, isLab, nowParts, shortDivision, t12 } from '../../config/schedule';
+import { Lock, FlaskConical, CalendarPlus } from 'lucide-react';
+import { DAYS, DAY_LABELS, PERIODS, RECESS, isLab, nowParts, shortDivision, t12, nextDateFor, niceDate, toMin } from '../../config/schedule';
 
 /**
  * Weekly timetable matrix (Mon–Sat × 7 periods, lunch recess after period 4).
  *
  * perspective: 'section' shows the teacher on each card, 'teacher' shows the division.
  * editable:    enables drag-and-drop; validateMove/onMove are then required.
+ * extras:      one-off room bookings / extra lectures. When given, each day row
+ *              shows its next date and the bookings on that date appear in
+ *              the matching period cells.
  */
 export default function TimetableGrid({
   slots = [],
@@ -16,6 +19,7 @@ export default function TimetableGrid({
   onMove,
   onSlotClick,
   conflictIds = new Set(),
+  extras = null,
   id = 'timetable',
 }) {
   const [now, setNow] = useState(nowParts());
@@ -31,6 +35,9 @@ export default function TimetableGrid({
   const slotAt = (day, p) => slots.find((s) => s.day === day && s.slotIndex === p);
   const coveredBy = (day, p) => slots.find((s) => s.day === day && s.slotIndex < p && s.slotIndex + s.duration > p);
   const nowPeriod = PERIODS.find((p) => p.start <= now.time && now.time < p.end);
+  const dates = extras ? Object.fromEntries(DAYS.map((d) => [d, nextDateFor(d)])) : {};
+  const extrasAt = (day, p) => (extras || []).filter((b) => b.date === dates[day]
+    && toMin(b.startTime) < toMin(p.end) && toMin(p.start) < toMin(b.endTime));
 
   // --- drag and drop ---
   const startDrag = (e, slot) => {
@@ -98,7 +105,8 @@ export default function TimetableGrid({
             <tr key={day} className={now.day === day ? 'tt-today' : ''}>
               <th scope="row" className="tt-day">
                 {DAY_LABELS[day]}
-                {now.day === day && <span className="tt-today-tag">Today</span>}
+                {now.day === day ? <span className="tt-today-tag">Today</span>
+                  : extras && <span className="tt-date-tag">{niceDate(dates[day], { day: 'numeric', month: 'short' })}</span>}
               </th>
               {PERIODS.map((p) => {
                 const recessCell = p.index === RECESS.afterPeriod && (
@@ -110,6 +118,7 @@ export default function TimetableGrid({
                 );
                 if (coveredBy(day, p.index)) return <Fragment key={p.index}>{recessCell}</Fragment>;
                 const slot = slotAt(day, p.index);
+                const extraHere = extras ? extrasAt(day, p) : [];
                 const key = `${day}-${p.index}`;
                 const ds = dropState[key];
                 const isNow = now.day === day && nowPeriod && slot && nowPeriod.index >= slot.slotIndex && nowPeriod.index < slot.slotIndex + slot.duration;
@@ -133,6 +142,7 @@ export default function TimetableGrid({
                           onClick={onSlotClick ? () => onSlotClick(slot) : undefined}
                         />
                       )}
+                      {extraHere.map((b) => <ExtraCard key={b._id} booking={b} perspective={perspective} />)}
                     </td>
                     {recessCell}
                   </Fragment>
@@ -173,5 +183,24 @@ export function LectureCard({ slot, perspective, live, clash, onClick, ...dragPr
       </span>
       <span className="lecture-room">{slot.classroom?.roomNumber}</span>
     </Tag>
+  );
+}
+
+// A one-off booking or extra lecture shown inside the weekly grid
+function ExtraCard({ booking, perspective }) {
+  return (
+    <div className="lecture lecture-extra" title={booking.reason}>
+      <span className="lecture-top">
+        <span className="lecture-code">Extra, {t12(booking.startTime)}</span>
+        <CalendarPlus size={13} aria-hidden="true" />
+      </span>
+      <span className="lecture-name">{booking.subject?.name || booking.title}</span>
+      <span className="lecture-meta">
+        {booking.kind === 'extra-lecture'
+          ? (perspective === 'teacher' ? shortDivision(booking.classSection) : booking.teacher?.name)
+          : `${booking.attendees} people`}
+      </span>
+      <span className="lecture-room">{booking.classroom?.roomNumber}</span>
+    </div>
   );
 }

@@ -56,6 +56,19 @@ router.route('/professor/profile').get(professorOnly, portal.professorProfile).p
 // ---- Student portal (any logged-in user can view a division's published timetable) ----
 router.get('/student/timetable', verifyToken, portal.studentTimetable);
 
+// ---- Room bookings & notifications ----
+const booking = require('../controllers/bookingController');
+const requester = [verifyToken, requireRole('student', 'professor')];
+router.get('/bookings', adminOnly, booking.all);
+router.post('/bookings', requester, booking.create);
+router.get('/bookings/mine', requester, booking.mine);
+router.get('/bookings/feed', requester, booking.feed);
+router.get('/bookings/availability', verifyToken, booking.availability);
+router.get('/bookings/my-divisions', professorOnly, booking.myDivisions);
+router.patch('/bookings/:id/cancel', verifyToken, booking.cancel);
+router.get('/notifications', verifyToken, booking.notifications);
+router.patch('/notifications/read', verifyToken, booking.markRead);
+
 // ---- PDF export ----
 router.get('/export/pdf/teacher/:teacherId', verifyToken, exporter.teacherPdf);
 router.get('/export/pdf/:sectionId', verifyToken, exporter.sectionPdf);

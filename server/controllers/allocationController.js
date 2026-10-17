@@ -1,13 +1,14 @@
 const TimetableSlot = require('../models/TimetableSlot');
 const { asyncHandler, HttpError } = require('../middleware/errorHandler');
 const { blockTimes } = require('../config/constants');
-const { runAllocation, getConflictReport, validateCandidate, populateSlot } = require('../services/timetableService');
+const { runAllocation, getConflictReport, validateCandidate, populateSlot, bookingClashes } = require('../services/timetableService');
 
 // POST /api/v1/allocation/generate
 exports.generate = asyncHandler(async (req, res) => {
   const result = await runAllocation();
   if (result.message) throw new HttpError(400, result.message);
   const report = await getConflictReport();
+  const clashes = await bookingClashes();
   res.json({
     success: true,
     complete: result.success,
@@ -16,7 +17,7 @@ exports.generate = asyncHandler(async (req, res) => {
       : `Generated with ${result.unallocated.length} lecture(s) that could not be placed. See details.`,
     stats: result.stats,
     unallocated: result.unallocated,
-    warnings: [...result.warnings, ...report.warnings.map((w) => w.message)],
+    warnings: [...clashes, ...result.warnings, ...report.warnings.map((w) => w.message)],
     conflicts: report.conflicts,
   });
 });

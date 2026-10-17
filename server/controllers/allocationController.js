@@ -1,176 +1,119 @@
-const { randomUUID } = require('crypto');
-const { solveTimetable } = require('../services/allocationEngine');
-const { checkClash } = require('../services/conflictDetector');
 const TimetableSlot = require('../models/TimetableSlot');
+const { asyncHandler, HttpError } = require('../middleware/errorHandler');
+const { blockTimes } = require('../config/constants');
+const { runAllocation, getConflictReport, validateCandidate, populateSlot } = require('../services/timetableService');
 
-exports.generateSchedule = async (req, res) => {
-  try {
-    const samplePool = [
-      {
-        subjectName: 'Database Systems',
-        teacher: 'Dr. Amit Sharma',
-        type: 'theory'
-      },
-      {
-        subjectName: 'Operating Systems',
-        teacher: 'Prof. Vikas Patil',
-        type: 'theory'
-      }
-    ];
+// POST /api/v1/allocation/generate
+exports.generate = asyncHandler(async (req, res) => {
+  const result = await runAllocation();
+  if (result.message) throw new HttpError(400, result.message);
+  const report = await getConflictReport();
+  res.json({
+    success: true,
+    complete: result.success,
+    message: result.success
+      ? `Timetable generated: all ${result.stats.placed} lectures placed with zero clashes.`
+      : `Generated with ${result.unallocated.length} lecture(s) that could not be placed. See details.`,
+    stats: result.stats,
+    unallocated: result.unallocated,
+    warnings: [...result.warnings, ...report.warnings.map((w) => w.message)],
+    conflicts: report.conflicts,
+  });
+});
 
-    const sampleRooms = [
-      { roomNumber: 'Room 402' },
-      { roomNumber: 'Lab 3' }
-    ];
+// GET /api/v1/allocation/timetable?section=&teacher=
+exports.getTimetable = asyncHandler(async (req, res) => {
+  const filter = {};
+  if (req.query.section) filter.classSection = req.query.section;
+  if (req.query.teacher) filter.teacher = req.query.teacher;
+  const slots = await populateSlot(TimetableSlot.find(filter).sort({ day: 1, slotIndex: 1 }));
+  res.json({ success: true, data: slots });
+});
 
-    const result = solveTimetable(samplePool, sampleRooms);
+// GET /api/v1/allocation/conflicts
+exports.getConflicts = asyncHandler(async (req, res) => {
+  res.json({ success: true, data: await getConflictReport() });
+});
 
-    return res.json({
-      success: result.success,
-      count: result.allocated.length,
-      data: result.allocated
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message
-    });
+function candidateFrom(existing, body) {
+  const duration = body.duration || (existing && existing.duration) || 1;
+  return {
+    _id: existing ? existing._id : undefined,
+    classSection: body.classSection || (existing && existing.classSection),
+    subject: body.subject || (existing && existing.subject),
+    teacher: body.teacher || (existing && existing.teacher),
+    classroom: body.classroom || (existing && existing.classroom),
+    day: body.day || (existing && existing.day),
+    slotIndex: Number(body.slotIndex || (existing && existing.slotIndex)),
+    duration,
+  };
+}
+
+// POST /api/v1/allocation/validate  { slotId?, day, slotIndex, classroom?, teacher? ... }
+// Used by drag-and-drop to check a move before saving it.
+exports.validate = asyncHandler(async (req, res) => {
+  const existing = req.body.slotId ? await TimetableSlot.findById(req.body.slotId).lean() : null;
+  if (req.body.slotId && !existing) throw new HttpError(404, 'Slot not found.');
+  const candidate = candidateFrom(existing, req.body);
+  const result = await validateCandidate(candidate);
+  res.json({ success: true, ...result });
+});
+
+// PATCH /api/v1/allocation/slots/:id  — move or edit a slot (validated)
+exports.updateSlot = asyncHandler(async (req, res) => {
+  const slot = await TimetableSlot.findById(req.params.id);
+  if (!slot) throw new HttpError(404, 'Slot not found.');
+  const candidate = candidateFrom(slot.toObject(), req.body);
+  const result = await validateCandidate(candidate);
+  if (!result.valid && !req.body.force) {
+    throw new HttpError(409, result.conflicts[0].message, { conflicts: result.conflicts, warnings: result.warnings });
   }
-};
+  Object.assign(slot, {
+    day: candidate.day,
+    slotIndex: candidate.slotIndex,
+    classroom: candidate.classroom,
+    teacher: candidate.teacher,
+    ...blockTimes(candidate.slotIndex, candidate.duration),
+    isPublished: false,
+    // Manually placed slots are locked so the engine keeps them
+    isLocked: req.body.isLocked !== undefined ? Boolean(req.body.isLocked) : true,
+  });
+  await slot.save();
+  await TimetableSlot.updateMany({}, { $set: { isPublished: false } });
+  res.json({ success: true, data: await populateSlot(TimetableSlot.findById(slot._id)), warnings: result.warnings });
+});
 
-exports.publishTimetable = async (req, res) => {
-  try {
-    const { slots } = req.body;
+// PATCH /api/v1/allocation/slots/:id/lock
+exports.toggleLock = asyncHandler(async (req, res) => {
+  const slot = await TimetableSlot.findById(req.params.id);
+  if (!slot) throw new HttpError(404, 'Slot not found.');
+  slot.isLocked = req.body.isLocked !== undefined ? Boolean(req.body.isLocked) : !slot.isLocked;
+  await slot.save();
+  res.json({ success: true, data: { _id: slot._id, isLocked: slot.isLocked } });
+});
 
-    if (!Array.isArray(slots) || slots.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Provide a non-empty slots array.'
-      });
+// DELETE /api/v1/allocation/slots/:id
+exports.deleteSlot = asyncHandler(async (req, res) => {
+  const slot = await TimetableSlot.findByIdAndDelete(req.params.id);
+  if (!slot) throw new HttpError(404, 'Slot not found.');
+  res.json({ success: true, message: 'Slot removed.' });
+});
+
+// PATCH /api/v1/allocation/publish  { publish: true|false }
+exports.publish = asyncHandler(async (req, res) => {
+  const publish = req.body.publish !== false;
+  const total = await TimetableSlot.countDocuments();
+  if (!total) throw new HttpError(400, 'Nothing to publish yet. Generate a timetable first.');
+  if (publish) {
+    const report = await getConflictReport();
+    if (report.conflicts.length && !req.body.force) {
+      throw new HttpError(409, `Resolve ${report.conflicts.length} clash(es) before publishing.`, { conflicts: report.conflicts });
     }
-
-    const validDays = [
-      'MONDAY',
-      'TUESDAY',
-      'WEDNESDAY',
-      'THURSDAY',
-      'FRIDAY'
-    ];
-
-    const validatedSlots = [];
-
-    for (const slot of slots) {
-      if (!slot || typeof slot !== 'object' || Array.isArray(slot)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Each slot must be an object.'
-        });
-      }
-
-      const { day, slotIndex, subjectName, teacherName, roomNumber } = slot;
-
-      if (
-        !validDays.includes(day) ||
-        !Number.isInteger(slotIndex) ||
-        slotIndex < 1 ||
-        slotIndex > 6 ||
-        typeof subjectName !== 'string' ||
-        !subjectName.trim() ||
-        typeof teacherName !== 'string' ||
-        !teacherName.trim() ||
-        typeof roomNumber !== 'string' ||
-        !roomNumber.trim()
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: 'Each slot needs a valid day, slotIndex (1-6), subjectName, teacherName and roomNumber.'
-        });
-      }
-
-      const normalizedSlot = {
-        day,
-        slotIndex,
-        subjectName: subjectName.trim(),
-        teacherName: teacherName.trim(),
-        roomNumber: roomNumber.trim()
-      };
-
-      const clash = checkClash({
-        teacher: normalizedSlot.teacherName,
-        room: normalizedSlot.roomNumber,
-        day: normalizedSlot.day,
-        slotIndex: normalizedSlot.slotIndex,
-        existingSlots: validatedSlots
-      });
-
-      if (!clash.valid) {
-        return res.status(409).json({
-          success: false,
-          message: clash.error
-        });
-      }
-
-      validatedSlots.push(normalizedSlot);
-    }
-
-    const timetableId = randomUUID();
-
-    const documents = validatedSlots.map((slot) => ({
-      ...slot,
-      timetableId,
-      isPublished: true
-    }));
-
-    const createdSlots = await TimetableSlot.insertMany(documents);
-
-    return res.status(201).json({
-      success: true,
-      message: 'Timetable published successfully.',
-      timetableId,
-      count: createdSlots.length,
-      data: createdSlots
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message
-    });
   }
-};
-
-exports.unpublishTimetable = async (req, res) => {
-  try {
-    const { timetableId } = req.params;
-
-    if (!timetableId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Timetable ID is required.'
-      });
-    }
-
-    const result = await TimetableSlot.updateMany(
-      { timetableId, isPublished: true },
-      { $set: { isPublished: false } }
-    );
-
-    if (result.matchedCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No published timetable found for this ID.'
-      });
-    }
-
-    return res.json({
-      success: true,
-      message: 'Timetable unpublished successfully.',
-      timetableId,
-      count: result.modifiedCount
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
+  await TimetableSlot.updateMany({}, { $set: { isPublished: publish } });
+  res.json({
+    success: true,
+    message: publish ? 'Timetable published to all professors and students.' : 'Timetable withdrawn. Portals now show no timetable.',
+    count: total,
+  });
+});

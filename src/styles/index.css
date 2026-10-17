@@ -99,6 +99,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .field-span, .form-grid .error-note { grid-column: 1 / -1; }
 .form-narrow { grid-template-columns: 1fr; align-self: start; }
+.form-medium { max-width: 760px; }
+.form-narrow.form-medium { max-width: 440px; }
 .check { display: flex; align-items: center; gap: 8px; font-size: 14px; align-self: end; padding-bottom: 8px; }
 .inline-field { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; }
 .inline-field select { min-width: 280px; }
@@ -450,6 +452,15 @@ button.lecture:hover { filter: brightness(.97); }
 .notif-empty { padding: 8px 0; }
 .notices .notif-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); column-gap: 24px; }
 .notices .notif { border-bottom: 1px solid var(--line); }
+
+/* ---------- Student list filters ---------- */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 16px; }
+.filter-bar .field { min-width: 200px; }
+.filter-bar select { width: 100%; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface); }
+.filter-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.chip { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: 13px; cursor: pointer; color: var(--muted); }
+.chip.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+.chip strong { margin-left: 6px; font-weight: 700; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1100px) {

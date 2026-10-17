@@ -35,4 +35,4 @@ exports.requireRole = (...roles) => (req, res, next) => {
 };
 
 exports.signToken = (user) =>
-  jwt.sign({ id: user._id, role: user.role }, getSecret(), { expiresIn: '7d' });
+  jwt.sign({ id: user._id, role: user.role }, getSecret(), { expiresIn: '8h' });

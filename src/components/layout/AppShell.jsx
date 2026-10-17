@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, DoorOpen, BookOpen, GraduationCap, CalendarCog, UserRound, LogOut, CalendarDays, Contact, CalendarPlus, CalendarCheck,
+  LayoutDashboard, Users, DoorOpen, BookOpen, GraduationCap, CalendarCog, UserRound, LogOut, CalendarDays, Contact, CalendarPlus, CalendarCheck, KeyRound,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import college from '../../config/college';
@@ -22,10 +22,12 @@ const NAV = {
     { to: '/professor', label: 'My Timetable', icon: CalendarDays, end: true },
     { to: '/professor/rooms', label: 'Book a room', icon: CalendarPlus },
     { to: '/professor/profile', label: 'Profile & Availability', icon: UserRound },
+    { to: '/professor/password', label: 'Change password', icon: KeyRound },
   ],
   student: [
     { to: '/student', label: 'Class Timetable', icon: CalendarDays, end: true },
     { to: '/student/rooms', label: 'Book a room', icon: CalendarPlus },
+    { to: '/student/password', label: 'Change password', icon: KeyRound },
   ],
 };
 

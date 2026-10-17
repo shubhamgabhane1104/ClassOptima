@@ -1,18 +1,18 @@
 // Small fetch wrapper that adds the JWT token and turns API errors into exceptions.
 // In development, Vite proxies /api to the Express server (see vite.config.js).
 const BASE = import.meta.env.VITE_API_URL || '/api/v1';
-const TOKEN_KEY = 'classoptima_token';
+// The login token is kept only in memory (a JavaScript variable), never in
+// localStorage or cookies. So closing the tab, closing the browser or
+// refreshing the page ends the session and the user must sign in again.
+let memoryToken = null;
+
+// Remove a token saved by older versions of the app, which used localStorage.
+try { localStorage.removeItem('classoptima_token'); } catch { /* storage unavailable */ }
 
 export const tokenStore = {
-  get: () => {
-    try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
-  },
-  set: (t) => {
-    try { localStorage.setItem(TOKEN_KEY, t); } catch { /* storage unavailable */ }
-  },
-  clear: () => {
-    try { localStorage.removeItem(TOKEN_KEY); } catch { /* storage unavailable */ }
-  },
+  get: () => memoryToken,
+  set: (t) => { memoryToken = t; },
+  clear: () => { memoryToken = null; },
 };
 
 export class ApiError extends Error {

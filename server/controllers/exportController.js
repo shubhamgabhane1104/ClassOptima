@@ -7,10 +7,10 @@ const { asyncHandler, HttpError } = require('../middleware/errorHandler');
 const { populateSlot } = require('../services/timetableService');
 const { DAYS, DAY_LABELS, PERIODS, RECESS } = require('../config/constants');
 
-const NAVY = '#14213d';
-const GOLD = '#c99a2e';
-const LAB = '#e6f4ea';
-const THEORY = '#e8eef9';
+const NAVY = '#4e1520'; // header and headings (maroon)
+const GOLD = '#e0912f'; // accent (marigold)
+const LAB = '#e0f0ec';
+const THEORY = '#e7eef4';
 
 function drawTimetable(doc, { title, subtitle, slots, cellLine }) {
   const collegeName = process.env.COLLEGE_NAME || 'ClassOptima Institute of Technology';
@@ -45,7 +45,7 @@ function drawTimetable(doc, { title, subtitle, slots, cellLine }) {
   });
 
   // Header row
-  doc.rect(margin, top, pageW - margin * 2, headH).fill('#f3efe3');
+  doc.rect(margin, top, pageW - margin * 2, headH).fill('#eef0eb');
   doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(9).text('Day', margin + 6, top + 10);
   columns.forEach((c, i) => {
     if (c.kind === 'recess') return;
@@ -64,9 +64,9 @@ function drawTimetable(doc, { title, subtitle, slots, cellLine }) {
   // Pass 1: row and recess backgrounds
   DAYS.forEach((day, r) => {
     const y = top + headH + r * rowH;
-    doc.rect(margin, y, dayW, rowH).fill(r % 2 ? '#fbfaf6' : '#ffffff');
+    doc.rect(margin, y, dayW, rowH).fill(r % 2 ? '#f7f8f5' : '#ffffff');
   });
-  doc.rect(colX[recessIdx], top + headH, recessW, bottom - top - headH).fill('#f3efe3');
+  doc.rect(colX[recessIdx], top + headH, recessW, bottom - top - headH).fill('#eef0eb');
 
   // Pass 2: grid lines (drawn before the cells so multi-period labs cover them)
   doc.lineWidth(0.5).strokeColor('#cccccc');

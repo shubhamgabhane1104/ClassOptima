@@ -39,7 +39,7 @@ export default function AdminDashboard() {
           <div className={`status-card status-${stats.status}`}>
             <span>Timetable status</span>
             <strong>{STATUS_TEXT[stats.status]}</strong>
-            <Link to="/admin/timetable" className="btn btn-gold btn-sm"><CalendarCog size={15} /> Open generator</Link>
+            <Link to="/admin/timetable" className="btn btn-accent btn-sm"><CalendarCog size={15} /> Open generator</Link>
           </div>
         )}
       </PhotoBanner>

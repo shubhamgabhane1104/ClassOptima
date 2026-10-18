@@ -132,7 +132,7 @@ export default function TimetableGenerator() {
             {published ? (
               <button type="button" className="btn btn-outline" onClick={() => publish(false)} disabled={!!busy}><Undo2 size={18} /> Unpublish</button>
             ) : (
-              <button type="button" className="btn btn-gold" onClick={() => publish(true)} disabled={!!busy || !slots.length}><Send size={18} /> Publish</button>
+              <button type="button" className="btn btn-accent" onClick={() => publish(true)} disabled={!!busy || !slots.length}><Send size={18} /> Publish</button>
             )}
           </>
         )}
@@ -172,7 +172,7 @@ export default function TimetableGenerator() {
                 <option key={x._id} value={x._id}>{view.kind === 'section' ? divisionLabel(x) : x.name}</option>
               ))}
             </select>
-            <span className={`pill ${!slots.length ? '' : published ? 'pill-green' : 'pill-gold'}`}>
+            <span className={`pill ${!slots.length ? '' : published ? 'pill-green' : 'pill-accent'}`}>
               {!slots.length ? 'Not generated' : published ? 'Published' : 'Draft'}
             </span>
             <span className={`pill ${report.conflicts.length ? 'pill-red' : 'pill-green'}`}>

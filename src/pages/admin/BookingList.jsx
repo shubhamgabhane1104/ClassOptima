@@ -58,7 +58,7 @@ export default function BookingList() {
                     </td>
                     <td data-label="Booked by">
                       {b.requesterName}
-                      <div><span className={`tag ${b.kind === 'extra-lecture' ? 'tag-blue' : b.kind === 'student-activity' ? 'tag-green' : 'tag-gold'}`}>{KIND[b.kind]}</span>{b.classSection && <span className="muted small"> {shortDivision(b.classSection)}</span>}</div>
+                      <div><span className={`tag ${b.kind === 'extra-lecture' ? 'tag-blue' : b.kind === 'student-activity' ? 'tag-green' : 'tag-accent'}`}>{KIND[b.kind]}</span>{b.classSection && <span className="muted small"> {shortDivision(b.classSection)}</span>}</div>
                     </td>
                     <td data-label="Room">{b.classroom?.roomNumber}</td>
                     <td data-label="People">{b.attendees}</td>

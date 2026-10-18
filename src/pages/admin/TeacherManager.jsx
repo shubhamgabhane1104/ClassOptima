@@ -34,7 +34,7 @@ export default function TeacherManager() {
         { label: 'Department', render: (t) => t.department },
         { label: 'Cabin', render: (t) => t.cabinNumber || '—' },
         { label: 'Load limit', render: (t) => `${t.maxHoursPerWeek} h/week, ${t.maxHoursPerDay} h/day` },
-        { label: 'Availability', render: (t) => (restricted(t) ? <span className="tag tag-gold">{restricted(t)} periods blocked</span> : <span className="tag">All week</span>) },
+        { label: 'Availability', render: (t) => (restricted(t) ? <span className="tag tag-accent">{restricted(t)} periods blocked</span> : <span className="tag">All week</span>) },
         { label: 'Login', render: (t) => <span className="muted small">{t.email}</span> },
       ]}
       renderForm={(f, set) => {
